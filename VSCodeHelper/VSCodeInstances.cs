@@ -69,10 +69,11 @@ namespace Flow.Plugin.VSCodeWorkspaces.VSCodeHelper
             Instances = new List<VSCodeInstance>();
 
             _systemPath = Environment.GetEnvironmentVariable("PATH") ?? "";
-            var paths = _systemPath.Split(";").Where(x =>
-                x.Contains("VS Code", StringComparison.OrdinalIgnoreCase) ||
-                x.Contains("codium", StringComparison.OrdinalIgnoreCase) ||
-                x.Contains("vscode", StringComparison.OrdinalIgnoreCase));
+            var paths = _systemPath.Split(";").Where(path =>
+                path.Contains("VS Code", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("codium", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("vscode", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("Cursor"));
             foreach (var path in paths)
             {
                 if (!Directory.Exists(path))
@@ -95,33 +96,39 @@ namespace Flow.Plugin.VSCodeWorkspaces.VSCodeHelper
                 if (files.Length <= 0)
                     continue;
 
-                var file = files[0];
+                // リストの最初というよりはリストには引っかかった場合は一つしかないため[0]を取り出す
+                var vscodeExecFile = files[0];
                 var version = string.Empty;
 
                 var instance = new VSCodeInstance
                 {
-                    ExecutablePath = file,
+                    ExecutablePath = vscodeExecFile,
                 };
 
-                if (file.EndsWith("code"))
+                if (vscodeExecFile.EndsWith("code"))
                 {
                     version = "Code";
                     instance.VSCodeVersion = VSCodeVersion.Stable;
                 }
-                else if (file.EndsWith("code-insiders"))
+                else if (vscodeExecFile.EndsWith("code-insiders"))
                 {
                     version = "Code - Insiders";
                     instance.VSCodeVersion = VSCodeVersion.Insiders;
                 }
-                else if (file.EndsWith("code-exploration"))
+                else if (vscodeExecFile.EndsWith("code-exploration"))
                 {
                     version = "Code - Exploration";
                     instance.VSCodeVersion = VSCodeVersion.Exploration;
                 }
-                else if (file.EndsWith("codium"))
+                else if (vscodeExecFile.EndsWith("codium"))
                 {
                     version = "VSCodium";
                     instance.VSCodeVersion = VSCodeVersion.Stable;
+                }
+                else if (vscodeExecFile.EndsWith("Cursor"))
+                {
+                    version = "Cursor";
+                    instance.VSCodeVersion = VSCodeVersion.Cursor;
                 }
 
                 if (version == string.Empty)
