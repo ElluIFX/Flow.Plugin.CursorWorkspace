@@ -11,7 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Media.Imaging;
 
-namespace Flow.Plugin.VSCodeWorkspaces.VSCodeHelper
+namespace Flow.Plugin.CursorWorkspaces.VSCodeHelper
 {
     public static class VSCodeInstances
     {
@@ -37,6 +37,11 @@ namespace Flow.Plugin.VSCodeWorkspaces.VSCodeHelper
 
                 return bitmapImage;
             }
+        }
+
+        private static string loadCursorPath()
+        {
+            return "impl";
         }
 
         private static Bitmap BitmapOverlayToCenter(Bitmap bitmap1, Bitmap overlayBitmap)
@@ -69,19 +74,22 @@ namespace Flow.Plugin.VSCodeWorkspaces.VSCodeHelper
             Instances = new List<VSCodeInstance>();
 
             _systemPath = Environment.GetEnvironmentVariable("PATH") ?? "";
+
             var paths = _systemPath.Split(";").Where(path =>
                 path.Contains("VS Code", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("codium", StringComparison.OrdinalIgnoreCase) ||
-                path.Contains("vscode", StringComparison.OrdinalIgnoreCase) ||
-                path.Contains("Cursor"));
+                path.Contains("vscode", StringComparison.OrdinalIgnoreCase));
+
             foreach (var path in paths)
             {
                 if (!Directory.Exists(path))
                     continue;
 
-                var newPath = path;
-                if (!Path.GetFileName(path).Equals("bin", StringComparison.OrdinalIgnoreCase))
-                    newPath = Path.Combine(path, "bin");
+                // PATHにいたpath以下にいるファイル名に "code" または "codium" が含まれ、".cmd" で終わらないものリスト
+                var files = Directory.EnumerateFiles(path).Where(file =>
+                    (file.Contains("code", StringComparison.OrdinalIgnoreCase) ||
+                    file.Contains("codium", StringComparison.OrdinalIgnoreCase))
+                    && !file.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase)).ToArray();
 
                 if (!Directory.Exists(newPath))
                     continue;
@@ -100,10 +108,7 @@ namespace Flow.Plugin.VSCodeWorkspaces.VSCodeHelper
                 var vscodeExecFile = files[0];
                 var version = string.Empty;
 
-                var instance = new VSCodeInstance
-                {
-                    ExecutablePath = vscodeExecFile,
-                };
+                var instance = new VSCodeInstance { ExecutablePath = vscodeExecFile };
 
                 if (vscodeExecFile.EndsWith("code"))
                 {
